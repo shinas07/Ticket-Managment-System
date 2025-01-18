@@ -7,9 +7,122 @@ import {
   PencilIcon,
   EyeIcon,
   ChevronDownIcon,
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 import api from '../../service/api';
 import { toast } from 'sonner';
+
+// Edit Ticket Modal Component
+const EditTicketModal = ({ ticket, onClose, onUpdate }) => {
+  const [formData, setFormData] = useState({
+    title: ticket.title,
+    description: ticket.description,
+    priority: ticket.priority,
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await onUpdate(ticket.id, formData);
+      onClose();
+    } catch (error) {
+      toast.info('ticket is already resolved');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-gray-800 rounded-xl p-6 w-full max-w-2xl border border-gray-700">
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="text-xl font-semibold text-white">Edit Ticket</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Title
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-300 mb-2">
+              Description
+            </label>
+            <textarea
+              name="description"
+              value={formData.description}
+              onChange={handleChange}
+              rows="4"
+              className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              required
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-300 mb-2">
+                Priority
+              </label>
+              <select
+                name="priority"
+                value={formData.priority}
+                onChange={handleChange}
+                className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500"
+              >
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-4 pt-4 border-t border-gray-700">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isSubmitting ? 'Updating...' : 'Update Ticket'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+};
 
 const UserTicketManagement = () => {
   const { user } = useAuth();
@@ -32,23 +145,24 @@ const UserTicketManagement = () => {
 
   const statusColors = {
     open: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
-    'in-progress': 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
+    in_progress: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     resolved: 'bg-green-500/10 text-green-500 border-green-500/20'
   };
 
-  // Fetch tickets
   useEffect(() => {
-    fetchTickets();
-  }, [filters]);
+    if (user) {
+      fetchTickets();
+    }
+  }, [filters, user]);
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({
-        ...filters,
-        user_id: user.id
-      });
-      const response = await api.get(`/api/tickets?${params}`);
+      const params = new URLSearchParams(
+        Object.entries(filters).filter(([_, value]) => value !== '')
+      );
+      
+      const response = await api.get(`/api/tickets/?${params}`);
       setTickets(response.data);
     } catch (error) {
       toast.error('Failed to fetch tickets');
@@ -57,30 +171,16 @@ const UserTicketManagement = () => {
     }
   };
 
-  // Delete ticket
-  const handleDeleteTicket = async (ticketId) => {
-    if (window.confirm('Are you sure you want to delete this ticket?')) {
-      try {
-        await api.delete(`/api/tickets/${ticketId}`);
-        setTickets(tickets.filter(ticket => ticket.id !== ticketId));
-        toast.success('Ticket deleted successfully');
-      } catch (error) {
-        toast.error('Failed to delete ticket');
-      }
-    }
-  };
-
-  // Update ticket
   const handleUpdateTicket = async (ticketId, updatedData) => {
     try {
-      const response = await api.put(`/api/tickets/${ticketId}`, updatedData);
+      const response = await api.put(`/api/tickets/${ticketId}/`, updatedData);
       setTickets(tickets.map(ticket => 
         ticket.id === ticketId ? response.data : ticket
       ));
       setShowEditModal(false);
       toast.success('Ticket updated successfully');
     } catch (error) {
-      toast.error('Failed to update ticket');
+      throw error; // Propagate error to modal component
     }
   };
 
@@ -94,7 +194,7 @@ const UserTicketManagement = () => {
             onClick={() => setShowDetailsModal(false)}
             className="text-gray-400 hover:text-white"
           >
-            ×
+            <XMarkIcon className="w-6 h-6" />
           </button>
         </div>
 
@@ -229,12 +329,6 @@ const UserTicketManagement = () => {
                     >
                       <PencilIcon className="w-5 h-5" />
                     </button>
-                    <button
-                      onClick={() => handleDeleteTicket(ticket.id)}
-                      className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                    >
-                      <TrashIcon className="w-5 h-5" />
-                    </button>
                   </div>
                 </div>
               </div>
@@ -245,12 +339,18 @@ const UserTicketManagement = () => {
 
       {/* Modals */}
       {showDetailsModal && <TicketDetailsModal />}
-      {showEditModal && (
-        // Add your EditTicketModal component here
-        null
+      {showEditModal && selectedTicket && (
+        <EditTicketModal
+          ticket={selectedTicket}
+          onClose={() => {
+            setShowEditModal(false);
+            setSelectedTicket(null);
+          }}
+          onUpdate={handleUpdateTicket}
+        />
       )}
     </UserLayout>
   );
 };
 
-export default UserTicketManagement; 
+export default UserTicketManagement;
