@@ -2,6 +2,15 @@
 
 A full-stack ticket management solution built with Django REST Framework and React. This system allows users to create, manage and track support tickets while providing administrators with comprehensive ticket management capabilities.
 
+## Screenshots
+
+### Landing Page
+![Landing Page](assets/landingpage.png)
+
+### User Dashboard
+![User Dashboard](assets/userdashboard.png)
+
+
 ## Overview
 
 The Ticket Management System provides a streamlined interface for:
