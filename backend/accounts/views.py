@@ -9,8 +9,12 @@ from .serializers import LoginSerializer, UserSerializer
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
 from rest_framework import generics, permissions
-from .serializers import UserSerializer,BlockUserSerializer,UserCreatingSerializer
+from .serializers import UserSerializer,BlockUserSerializer,UserCreatingSerializer,UserProfileSerializer
 from .models import User
+from rest_framework_simplejwt.exceptions import TokenError
+from rest_framework.permissions import IsAdminUser
+
+
 
 User = get_user_model()
 
@@ -18,18 +22,14 @@ User = get_user_model()
 
 class LoginView(APIView):
     def post(self, request, *args, **kwargs):
-        # Print received data for debugging
-        print("Received login data:", request.data)
-        
+        user_type = request.data.get('user_type')  # Make sure this matches frontend
 
         try:
-            # Initialize serializer with request context
             serializer = LoginSerializer(
                 data=request.data,
                 context={'request': request}
             )
             
-            # Validate the data
             if not serializer.is_valid():
                 print("Validation errors:", serializer.errors)
                 return Response(
@@ -37,26 +37,31 @@ class LoginView(APIView):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            # Get the authenticated user
             user = serializer.validated_data['user']
+           
+            # Convert roles to lowercase for comparison
+            user_role = user.role.lower() if user.role else ''
+            requested_type = user_type.lower() if user_type else ''
 
-                 # Check if the user is blocked
+            # Check user type with proper role mapping
+            if user_role != requested_type:
+                return Response({
+                    'error': f'Invalid user type. You are not authorized as {user_type}'
+                }, status=status.HTTP_403_FORBIDDEN)
+
             if user.is_blocked:
                 return Response(
                     {'error': 'You are blocked from logging in.'},
-                    status=status.HTTP_403_FORBIDDEN  # Forbidden status
+                    status=status.HTTP_403_FORBIDDEN
                 )
             
-            
-            # Generate tokens
             refresh = RefreshToken.for_user(user)
             
-            # Prepare response data
             response_data = {
                 'user': {
                     'id': user.id,
                     'email': user.email,
-                    'role': user.role,
+                    'role': user.role,  # Keep original role case
                     'is_superuser': user.is_superuser,
                     'is_staff': user.is_staff
                 },
@@ -76,17 +81,15 @@ class LoginView(APIView):
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
 
-class UserProfileView(APIView):
+class UserProfileView(generics.RetrieveAPIView):
+    serializer_class = UserProfileSerializer
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        serializer = UserSerializer(request.user)
-        return Response(serializer.data)
+    def get_object(self):
+        return self.request.user
 
 
 # Adminstrations User management
-from rest_framework.permissions import IsAdminUser
-
 
 class UserCreateView(generics.CreateAPIView):
     serializer_class = UserCreatingSerializer
@@ -142,17 +145,60 @@ class BlockUserView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
     
 
-
 class RefreshTokenView(APIView):
     def post(self, request):
         refresh_token = request.data.get('refresh')
+        
         if not refresh_token:
-            print('not refresh token')
-            return Response({'error': 'Refresh token not found'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'error': 'Refresh token not provided'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+            
         try:
-            refresh = RefreshToken(refresh_token)
-            access_token = str(refresh.access_token)
-            return Response({'access': access_token}, status=status.HTTP_200_OK)
+            # Verify and create new tokens
+            token = RefreshToken(refresh_token)
+            data = {
+                'access': str(token.access_token),
+                'refresh': str(token)  # Include new refresh token
+            }
+            
+            return Response(data, status=status.HTTP_200_OK)
+            
+        except TokenError as e:
+            return Response(
+                {'error': str(e)}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
         except Exception as e:
-            print(str(e))
-            return Response({'error': 'Invalid refresh token'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(
+                {'error': 'Invalid refresh token'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        
+
+class LogoutView(APIView):
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        try:
+            refresh_token = request.data.get('refresh_token')
+            if refresh_token:
+                # Get token object from refresh token
+                token = RefreshToken(refresh_token)
+                # Add refresh token to blacklist
+                token.blacklist()
+                
+                return Response({
+                    'message': 'Successfully logged out'
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'error': 'Refresh token is required'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        except Exception as e:
+            return Response({
+                'error': str(e)
+            }, status=status.HTTP_400_BAD_REQUEST)
