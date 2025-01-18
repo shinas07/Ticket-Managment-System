@@ -1,16 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import UserLayout from '../../components/layout/UserLayout';
-import {
-  PlusIcon,
-  FunnelIcon,
-  ChevronDownIcon,
-  ExclamationCircleIcon,
-  CheckCircleIcon,
-  ClockIcon
-} from '@heroicons/react/24/outline';
-import api from '../../service/api';
 import { toast } from 'sonner';
+import api from '../../service/api';
 
 const UserTicketCreate = () => {
   const { user } = useAuth();
@@ -24,14 +16,38 @@ const UserTicketCreate = () => {
     status: 'open',
   });
 
+  const [errors, setErrors] = useState({
+    title: '',
+    description: '',
+  });
+
   const priorityColors = {
     low: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
     medium: 'bg-yellow-500/10 text-yellow-500 border-yellow-500/20',
     high: 'bg-red-500/10 text-red-500 border-red-500/20'
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    if (!formData.title.trim()) {
+      newErrors.title = 'Title is required.';
+    }
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required.';
+    }
+    return newErrors;
+  };
+
   const handleCreateTicket = async (e) => {
     e.preventDefault();
+    const formErrors = validateForm();
+    
+    // If validation fails, set errors and don't submit the form
+    if (Object.keys(formErrors).length > 0) {
+      setErrors(formErrors);
+      return;
+    }
+
     try {
       const response = await api.post('/api/tickets/', {
         ...formData,
@@ -50,7 +66,7 @@ const UserTicketCreate = () => {
       // Optionally refresh tickets list
       setTickets(prevTickets => [response.data, ...prevTickets]);
     } catch (error) {
-      toast.error('Failed to create ticket: ' + error.message);
+      toast.error('Failed to create ticket');
     }
   };
 
@@ -75,11 +91,14 @@ const UserTicketCreate = () => {
               <input
                 type="text"
                 value={formData.title}
-                onChange={(e) => setFormData({...formData, title: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="Enter ticket title"
                 required
               />
+              {errors.title && (
+                <p className="text-red-500 text-xs mt-1">{errors.title}</p>
+              )}
             </div>
 
             {/* Description */}
@@ -89,12 +108,15 @@ const UserTicketCreate = () => {
               </label>
               <textarea
                 value={formData.description}
-                onChange={(e) => setFormData({...formData, description: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                 rows={6}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
                 placeholder="Describe your issue in detail..."
                 required
               />
+              {errors.description && (
+                <p className="text-red-500 text-xs mt-1">{errors.description}</p>
+              )}
             </div>
 
             {/* Priority Selection */}
@@ -104,7 +126,7 @@ const UserTicketCreate = () => {
               </label>
               <select
                 value={formData.priority}
-                onChange={(e) => setFormData({...formData, priority: e.target.value})}
+                onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
                 className="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2.5 text-white focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
               >
                 <option value="low">Low</option>
