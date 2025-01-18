@@ -22,39 +22,53 @@ api.interceptors.request.use(
     
 );
 
+
+
 const refreshAccessToken = async () => {
-    const encryptedRefreshToken = localStorage.getItem('refresh_token');
-    console.log(encryptedRefreshToken)
-    
-    if (!encryptedRefreshToken) {
-        throw new Error('No refresh token available');
-    }
-    
     try {
-        const decryptedRefreshToken = decryptToken(encryptedRefreshToken);
-        console.log(encryptedRefreshToken)
-        const response = await api.post(`auth/refresh/`, {
-            refresh: decryptedRefreshToken
-        });
+        const encryptedRefreshToken = localStorage.getItem('refresh_token');
         
+        if (!encryptedRefreshToken) {
+            throw new Error('No refresh token available');
+        }
+        
+        const decryptedRefreshToken = decryptToken(encryptedRefreshToken);
+        
+        // Make sure to use a new axios instance to avoid interceptors
+        const response = await axios.post(
+            `${BASE_URL}auth/refresh/`,
+            { refresh: decryptedRefreshToken },
+            { 
+                headers: { 'Content-Type': 'application/json' },
+                withCredentials: true
+            }
+        );
+
         if (response.data.access) {
-            const encryptedAccessToken = encryptToken(response.data.access);
-            localStorage.setItem('access_token', encryptedAccessToken);
+            // Store new tokens
+            localStorage.setItem('access_token', encryptToken(response.data.access));
             
             if (response.data.refresh) {
-                const encryptedNewRefreshToken = encryptToken(response.data.refresh);
-                localStorage.setItem('refresh_token', encryptedNewRefreshToken);
+                localStorage.setItem('refresh_token', encryptToken(response.data.refresh));
             }
+            
+            // Update axios default header
+            api.defaults.headers.common['Authorization'] = `Bearer ${response.data.access}`;
             
             return response.data.access;
         }
+        
         throw new Error('No access token received');
     } catch (error) {
+        console.error('Refresh token error:', error);
+        // Clear tokens on error
         localStorage.removeItem('access_token');
         localStorage.removeItem('refresh_token');
+        localStorage.removeItem('user');
         throw error;
     }
 };
+
 
 api.interceptors.response.use(
     response => response,
@@ -69,10 +83,7 @@ api.interceptors.response.use(
                 originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
                 return api(originalRequest);
             } catch (refreshError) {
-                localStorage.removeItem('access_token');
-                localStorage.removeItem('refresh_token');
-                localStorage.removeItem('user');
-                
+                localStorage.clear();
                 toast.error('Session expired. Please log in again.');
                 
                 if (window.location.pathname !== '/login') {
