@@ -2,6 +2,8 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import api from '../service/api';
 import { toast } from 'sonner';
 import { encryptToken, decryptToken } from '../utils/tokenUtils';
+import { useNavigate } from 'react-router-dom'; 
+
 
 const AuthContext = createContext(null);
 
@@ -79,16 +81,17 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = async () => {
+  const logout = async (navigate) => {
     try {
       const encryptedRefreshToken = localStorage.getItem('refresh_token');
       if (encryptedRefreshToken) {
         const refreshToken = decryptToken(encryptedRefreshToken);
-        await api.post('/api/auth/logout/', {
+        await api.post('/auth/logout/', {
           refresh_token: refreshToken
         });
       }
     } catch (error) {
+      toast.success('Logout successful');
     } finally {
       // Clear all auth data
       localStorage.removeItem('access_token');
@@ -97,7 +100,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.removeItem('user');
       api.defaults.headers.common['Authorization'] = '';
       setUser(null);
-      window.location.href = '/login';
+      toast.success('Logout successful');
+      navigate('/login');
     }
   };
 
