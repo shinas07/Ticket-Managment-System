@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   HomeIcon,
   TicketIcon,
@@ -13,6 +13,12 @@ import { useAuth } from '../../context/AuthContext';
 const AdminSidebar = ({ isOpen, setIsOpen }) => {
   const location = useLocation();
   const { logout } = useAuth();
+  const navigate = useNavigate()
+
+  const handlelogout = () => {
+    logout(navigate)
+  }
+
 
   const navigation = [
     { 
@@ -87,7 +93,7 @@ const AdminSidebar = ({ isOpen, setIsOpen }) => {
             </div>
           </div>
           <button
-            onClick={logout}
+            onClick={handlelogout}
             className="mt-4 flex items-center w-full px-4 py-2 text-sm text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-150"
           >
             <ArrowLeftOnRectangleIcon className="mr-3 h-5 w-5" />
