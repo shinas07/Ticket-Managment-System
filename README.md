@@ -114,7 +114,6 @@ src/
 - `/admin/dashboard` - Admin dashboard with analytics
 - `/admin/tickets` - All tickets management
 - `/admin/users` - User management
-- `/admin/reports` - System reports and statistics
 
 ## Setup Instructions
 
