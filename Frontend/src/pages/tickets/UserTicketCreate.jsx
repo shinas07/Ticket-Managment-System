@@ -3,11 +3,13 @@ import { useAuth } from '../../context/AuthContext';
 import UserLayout from '../../components/layout/UserLayout';
 import { toast } from 'sonner';
 import api from '../../service/api';
+import { useNavigate } from 'react-router-dom';
 
 const UserTicketCreate = () => {
   const { user } = useAuth();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [tickets, setTickets] = useState([]);
+  const navigate = useNavigate()
   
   const [formData, setFormData] = useState({
     title: '',
@@ -62,7 +64,7 @@ const UserTicketCreate = () => {
         priority: 'low',
         status: 'open'
       });
-      
+      navigate('/user/ticket/manage')
       // Optionally refresh tickets list
       setTickets(prevTickets => [response.data, ...prevTickets]);
     } catch (error) {
