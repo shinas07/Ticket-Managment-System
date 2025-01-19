@@ -1,4 +1,4 @@
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import {
   HomeIcon,
@@ -12,6 +12,10 @@ import {
 
 const UserSidebar = ({ isMobile, onClose }) => {
   const { logout } = useAuth();
+  const navigate = useNavigate()
+  const handlelogout = () => {
+    logout(navigate)
+  }
 
   const navItems = [
     { 
@@ -79,7 +83,7 @@ const UserSidebar = ({ isMobile, onClose }) => {
       {/* Logout Button */}
       <div className="absolute bottom-0 left-0 right-0 p-4">
         <button
-          onClick={logout}
+          onClick={handlelogout}
           className="w-full flex items-center gap-3 px-4 py-3 text-gray-400 
                    hover:bg-gray-800 hover:text-white rounded-lg transition-colors"
         >
