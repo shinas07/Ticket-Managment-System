@@ -28,7 +28,6 @@ The Ticket Management System provides a streamlined interface for:
 - Track ticket status and updates
 - Filter and sort tickets
 - Update ticket information
-- Personal profile management
 
 ### Admin Features
 - Comprehensive dashboard for ticket management
@@ -73,7 +72,7 @@ src/
 ├── components/           # Reusable UI components
 ├── context/             # Context providers and hooks
 ├── pages/               # Page components
-│   ├── public/          # Public pages (login, landing)
+│   ├── dashboard/       # Users and admin dashboard pages 
 │   ├── user/            # User dashboard and features
 │   └── admin/           # Admin dashboard and management
 ├── routes/              # Route configurations
@@ -87,7 +86,6 @@ src/
 - `POST /auth/login/` - User login
 - `POST /auth/refresh/` - Refresh access token
 - `POST /auth/logout/` - User logout
-- `GET /auth/profile/` - Get user profile
 - `POST /auth/users/create/` - Create new user (admin only)
 - `GET /auth/users/list/` - List all users (admin only)
 - `POST /auth/users/block/` - Block/unblock user (admin only)
@@ -111,7 +109,6 @@ src/
 - `/dashboard` - User dashboard showing their tickets
 - `/tickets/new` - Create new ticket
 - `/tickets/:id` - View ticket details
-- `/profile` - User profile management
 
 ### Admin Pages
 - `/admin/dashboard` - Admin dashboard with analytics
