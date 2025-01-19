@@ -32,6 +32,7 @@ const AdminTicketManagement = () => {
 
   const fetchTickets = async () => {
     try {
+      
       setLoading(true);
       const response = await api.get('/api/tickets', {
         params: {
@@ -229,7 +230,7 @@ const AdminTicketManagement = () => {
             <div className="border-t border-gray-700 pt-4">
               <div className="grid grid-cols-2 gap-4 text-sm text-gray-400">
                 <div>
-                  <p>Created by: {selectedTicket.user}</p>
+                  <p>Created by: {selectedTicket.created_by_email}</p>
                   <p>Created on: {new Date(selectedTicket.created_at).toLocaleDateString()}</p>
                 </div>
                 <div>
