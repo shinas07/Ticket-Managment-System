@@ -23,12 +23,10 @@ class Ticket(models.Model):
         on_delete=models.CASCADE, 
         related_name='created_tickets'
     )
-    assigned_to = models.ForeignKey(
-        User,
+    assigned_to = models.CharField(
+        max_length=255,
         null=True,
-        blank=True,
-        on_delete=models.SET_NULL,
-        related_name='assigned_tickets'
+        blank=True
     )
     priority = models.CharField(
         max_length=10,
