@@ -1,66 +1,48 @@
-# Ticket Management System
+# Career Path Recommendation System
 
-A full-stack ticket management solution built with Django REST Framework and React. This system allows users to create, manage and track support tickets while providing administrators with comprehensive ticket management capabilities.
+A full-stack application that helps students identify optimal career paths based on their academic performance and certifications. The system analyzes grade cards and certifications to provide personalized career recommendations and upskilling suggestions.
 
-## Screenshots
+## System Overview
 
-### Landing Page
-![Landing Page](assets/landingpage.png)
-
-### User Dashboard
-![User Dashboard](assets/userdashboard.png)
-
-
-## Overview
-
-The Ticket Management System provides a streamlined interface for:
-- Users to create and track support tickets
-- Administrators to manage and resolve tickets
-- Real-time status updates and priority management
-- Secure authentication and authorization
-- User management with blocking capabilities
-
-## Features
-
-### User Features
-- Secure authentication system with JWT
-- Create and manage support tickets
-- Track ticket status and updates
-- Filter and sort tickets
-- Update ticket information
-
-### Admin Features
-- Comprehensive dashboard for ticket management
-- User creation and management
-- Block/unblock users
-- Assign tickets to users
-- Update ticket status and priority
-- Access to all tickets in the system
-- User listing and management capabilities
+The Career Path Recommendation System provides:
+- Secure user authentication and profile management
+- Grade card and certification upload functionality
+- Academic performance analysis
+- AI-powered career recommendations
+- Course suggestions for skill enhancement
+- Data visualization of student strengths
 
 ## Tech Stack
 
 ### Backend
 - Django REST Framework
-- PostgreSQL
-- Simple JWT for authentication
-- Django CORS headers
+- PostgreSQL Database
+- Google Gemini API for AI recommendations
+- YouTube API for course suggestions
+- JWT Authentication
+- Pandas for processing CSV and JSON data
 
 ### Frontend
-- React (Vite)
-- Tailwind CSS for styling
-- Axios for API integration
+- React with Vite
+- Tailwind CSS
 - React Router for navigation
+- Sonner for notifications
 - Context API for state management
 
 ## Project Structure
 
 ### Backend Structure
 ```
-tickets_system/
-├── accounts/              # User authentication and management
-├── tickets/              # Ticket management application
-└── tickets_system/       # Main project directory
+backend/
+├── careerpath/           # Main application
+│   ├── views/
+│   ├── models/
+│   └── urls.py
+├── users/               # Authentication and user management
+│   ├── views.py
+│   ├── models.py
+│   └── urls.py
+└── config/             # Project configuration
     ├── settings.py
     ├── urls.py
     └── wsgi.py
@@ -68,178 +50,137 @@ tickets_system/
 
 ### Frontend Structure
 ```
-src/
-├── components/           # Reusable UI components
-├── context/             # Context providers and hooks
-├── pages/               # Page components
-│   ├── dashboard/       # Users and admin dashboard pages 
-│   ├── user/            # User dashboard and features
-│   └── admin/           # Admin dashboard and management
-├── routes/              # Route configurations
-├── services/            # API service integrations
-└── utils/               # Utility functions and helpers
+frontend/
+├── src/
+│   ├── components/     # Reusable UI components
+│   ├── context/       # Application state management
+│   ├── pages/         # Page components
+│   │   ├── auth/     # Login and registration
+│   │   ├── dashboard/ # User dashboard
+│   │   └── recommendations/ # Career recommendations
+│   ├── services/     # API integration
+│   └── utils/        # Helper functions
+├── public/           # Static assets
+└── index.html
 ```
 
 ## API Endpoints
 
 ### Authentication Endpoints (`/auth/`)
+- `POST /auth/register/` - User registration
 - `POST /auth/login/` - User login
-- `POST /auth/refresh/` - Refresh access token
 - `POST /auth/logout/` - User logout
-- `POST /auth/users/create/` - Create new user (admin only)
-- `GET /auth/users/list/` - List all users (admin only)
-- `POST /auth/users/block/` - Block/unblock user (admin only)
+- `GET /auth/profile/` - Get user profile
 
-### Ticket Endpoints (`/api/tickets/`)
-- `GET /api/tickets/` - List all tickets (filterable)
-- `POST /api/tickets/` - Create new ticket
-- `GET /api/tickets/<id>/` - Get specific ticket
-- `PUT /api/tickets/<id>/` - Update ticket
-- `DELETE /api/tickets/<id>/` - Delete ticket
-- `PATCH /api/tickets/<id>/status/` - Update ticket status
-- `PATCH /api/tickets/<id>/assign/` - Assign ticket to user
+### Career Path Endpoints (`/api/`)
+- `POST /api/upload/` - Upload grade cards and certifications
+- `GET /api/recommendations/` - Get career recommendations
+- `GET /api/courses/` - Get recommended courses
+- `GET /api/analysis/` - Get academic performance analysis
 
-## Pages and Navigation
+## Features
 
-### Public Pages
-- `/` - Landing page with system overview
-- `/login` - User authentication page
+### User Authentication
+- Secure registration and login system
+- JWT-based authentication
+- Protected routes for authenticated users
 
-### User Pages
-- `/dashboard` - User dashboard showing their tickets
-- `/tickets/new` - Create new ticket
-- `/tickets/:id` - View ticket details
+### File Upload
+- Support for CSV/JSON file formats
+- Grade card data validation
+- Certification verification
+- Progress tracking during upload
 
-### Admin Pages
-- `/admin/dashboard` - Admin dashboard with analytics
-- `/admin/tickets` - All tickets management
-- `/admin/users` - User management
+## Environment Configuration
+
+### Backend (.env)
+```env
+# Database Configuration
+DB_NAME=career_recommendation
+DB_USER=postgres
+DB_PASSWORD=your_password
+DB_HOST=localhost
+DB_PORT=5432
+
+# API Keys
+YOUTUBE_API_KEY=your_youtube_api_key
+GEMINI_API_KEY=your_gemini_api_key
+
+# Django Settings
+DEBUG=True
+SECRET_KEY=your_secret_key_here
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
 
 ## Setup Instructions
 
 ### Backend Setup
-
-1. Clone the repository:
 ```bash
-git clone https://github.com/shinas07/Ticket-Managment-System.git
-cd Ticket-Managment-System
-```
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
 
-2. Create and activate virtual environment:
-```bash
-python -m venv env
-source env/bin/activate  # On Windows: env\Scripts\activate
-```
-
-3. Install dependencies:
-```bash
+# Install dependencies
 pip install -r requirements.txt
-```
 
-4. Create `.env` file with the following configuration:
-```env
-# General Settings
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-CORS_ALLOWED_ORIGINS=http://localhost:5173
-CORS_ALLOW_CREDENTIALS=True
-
-# Django Secret Key (replace with a unique one in production)
-SECRET_KEY=your_unique_secret_key_here
-
-# Database Configuration 
-DB_NAME=ticket_system_db
-DB_USER=your_db_user_here
-DB_PASSWORD=your_db_password_here
-DB_HOST=localhost
-DB_PORT=5432
-
-```
-
-5. Setup database:
-```bash
+# Run migrations
 python manage.py migrate
-```
 
-6. Create superuser:
-```bash
-python manage.py createsuperuser
-```
-
-7. Run the server:
-```bash
+# Start server
 python manage.py runserver
 ```
 
 ### Frontend Setup
-
-1. Navigate to the frontend directory:
 ```bash
-cd frontend
-```
-
-2. Install dependencies:
-```bash
+# Install dependencies
 npm install
-```
 
-3. Create `.env` file:
-```env
-VITE_APP_API_URL=http://localhost:8000
-```
-
-4. Start the development server:
-```bash
+# Start development server
 npm run dev
 ```
 
-## URL Configuration
-
-### Backend URLs
-```python
-# Main URLs (urls.py)
-router = DefaultRouter()
-router.register(r'tickets', TicketViewSet, basename='ticket')
-
-urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('auth/', include('accounts.urls')),
-    path('api/', include(router.urls)),
-]
-
-# Auth URLs (accounts/urls.py)
-urlpatterns = [
-    path('login/', LoginView.as_view(), name='login'),
-    path('profile/', UserProfileView.as_view(), name='user-profile'),
-    path('users/create/', UserCreateView.as_view(), name='user-create'),
-    path('users/list/', UserListView.as_view(), name='user-list'),
-    path('users/block/', BlockUserView.as_view(), name='block-user'),
-    path('refresh/', RefreshTokenView.as_view(), name='token_refresh'),
-    path('logout/', LogoutView.as_view(), name='auth_logout'),
-]
-```
-## Deployment
-
-The application is designed to be deployed on any hosting platform that supports Django and React applications. Make sure to:
-
-1. Set appropriate environment variables
-2. Configure CORS settings
-3. Setup database connections
-4. Configure static file serving
-5. Enable HTTPS
-6. Set up proper security headers
-7. Configure domain settings
-
 ## Security Considerations
 
-- All endpoints except login and refresh are protected with JWT authentication
-- Admin endpoints require specific permissions
-- Password hashing is handled by Django's authentication system
-- CORS is configured to allow only specific origins
-- Debug mode should be disabled in production
-- Database credentials should be properly secured
-- API rate limiting should be implemented
+- Secure file upload validation
+- JWT token expiration and refresh
+- CORS configuration
+- Input sanitization
+- Secure storage of API keys
+- Data encryption
+
+
+## 📂 Sample Data
+
+The `sample_data/` directory contains test data used for evaluating the career recommendation system.
+
+### 📁 Structure
+
+### Grade Card Format (CSV)
+```csv
+subject,score,semester
+Mathematics,95,1
+Computer Science,88,1
+Physics,92,1
+```
+
+### Certification Format (JSON)
+```json
+{
+  "certifications": [
+    {
+      "name": "Python Programming",
+      "issuer": "Coursera",
+      "date": "2024-01-15"
+    }
+  ]
+}
+```
+
+## Future Enhancements
+
+- Machine learning model integration
 
 ---
 
-Built with Django REST Framework and React. For additional help or contributions, please open an issue or submit a pull request.
+For additional support or contributions, please create an issue or submit a pull request.
